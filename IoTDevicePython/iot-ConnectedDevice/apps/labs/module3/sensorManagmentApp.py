@@ -46,7 +46,7 @@ class SensorManagementApp(Thread):
             nominalTemp=int(self.deviceConfiReader.getProperty("nominalTemp"))
             
             #First sensor event(Check if current temperature surpassed or lower than  currentAverageTemperature +or- threshold )
-            if abs(currValue-self.tempSensorData.avgTemp)>threshold:
+            if abs(currValue-self.tempSensorData.avgValue)>threshold:
                 print("Send TemperatureNotification email...")
                 print(self.tempSensorData)
                 self.emailSender.sendEmailMessage("TemperatureNotification",self.tempSensorData)
