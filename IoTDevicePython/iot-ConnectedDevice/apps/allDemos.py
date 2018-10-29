@@ -22,7 +22,7 @@ def tempSensorAdaptorTest():
 def smtpClientTest():
     mySensorData=SensorData("Temperature")
     mySensorData.addNewValue(25)
-    emailSender=SmtpClientConnector("c://///")
+    emailSender=SmtpClientConnector("C:/Users/Leo/git/IoTRepository/iot-ConnectedDevice/data/ConnectedDevices.conf")
     emailSender.sendEmailMessage("TemperatureTest",mySensorData)
 
 
@@ -44,14 +44,11 @@ def MainDemo():
 
 #linuxPath:/etc/ConnectedDevices.conf
 
-
-
-
-tempSensorAdaptorTest()
+#tempSensorAdaptorTest()
 
 #smtpClientTest()
 
-#MainDemo()
+MainDemo()
 
 #i2cSenseHatDemo()
 

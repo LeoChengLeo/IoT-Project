@@ -6,16 +6,16 @@ Created on Sep 15, 2018
 from datetime import datetime
 import json
 from src.json2xml import Json2xml
-
+import os
 
 class SensorData:
     startedTime=None
     timeData=None
     type="No set"
-    currValue=None
-    avgValue=0
-    minValue=None
-    maxValue=None
+    currValue=0.0
+    avgValue=0.0
+    minValue=0.0
+    maxValue=0.0
     totalValue=0
     count=0
         
@@ -42,22 +42,22 @@ class SensorData:
     
             
     def __str__(self):
-        sensorInfo=str(self.type+":\n"
-                       +"\tStartedSince: "+self.startedTime+"\n"
+         
+        sensorInfo= str(self.type+":\n"
+                       +"\tStartedSince:"+self.startedTime+"\n"
                        +"\tTime: "+str(self.timeData)+"\n"
-                       +"\tCurrent"+self.type+" :"+str(self.currValue)+"\n"
-                       +"\tAverage"+self.type+" :"+str(self.avgValue)+"\n"
+                       +"\tCurrent"+self.type+":"+str(self.currValue)+"\n"
+                       +"\tAverage"+self.type+":"+str(self.avgValue)+"\n"
                        +"\tSampleNum: "+str(self.count)+"\n"
                        +"\tMin_"+self.type+": "+str(self.minValue)+"\n"
                        +"\tMax_"+self.type+": "+str(self.maxValue))
-        return sensorInfo  
-    
-      
-    def toJson(self):
         
+        return sensorInfo  
+      
+    
+    def toDict(self):
         dictSensorData={
-            
-                    "SensorData":{
+        
                        "type":self.type,
                        "startedTime":self.startedTime,
                        "timeData":self.timeData,
@@ -67,10 +67,13 @@ class SensorData:
                        "maxValue":self.maxValue,
                        "count":self.count,
                        "totalValue":self.totalValue
-                       }
                     }
+        return dictSensorData
         
-        return json.dumps(dictSensorData)
+      
+    def toJson(self):
+        
+        return json.dumps(self.toDict())
     
        
     def toXml(self):
@@ -81,17 +84,8 @@ class SensorData:
         
         return dataConverter.json2xml()    
         
+  
 
-
-
-sensor=SensorData("Temperature")
-
-sensor.addNewValue(10)
-
-print(sensor.toXml())
-   
-        
-    
         
         
         
