@@ -1,4 +1,4 @@
-package ioTConnectedDevicesGateWay.labs.module6;
+package ioTConnectedDevicesGateWay.labs.module8;
 
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;

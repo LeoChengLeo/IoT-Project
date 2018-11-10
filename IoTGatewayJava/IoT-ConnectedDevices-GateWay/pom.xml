@@ -23,7 +23,7 @@
     </dependency>
     
     
-     <dependency>
+    <dependency>
             <groupId>org.eclipse.californium</groupId>
             <artifactId>californium-core</artifactId>
             <version>1.0.6</version>

@@ -1,4 +1,5 @@
-package ioTConnectedDevicesGateWay.labs.module6;
+package iotCloudApplication.iotCloudApplication;
+
 
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;

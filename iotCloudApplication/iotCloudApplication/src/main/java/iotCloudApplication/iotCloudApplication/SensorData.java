@@ -1,7 +1,8 @@
-package ioTConnectedDevicesGateWay.labs.common;
 
+package iotCloudApplication.iotCloudApplication;
 
 import java.io.Serializable;
+
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -9,6 +10,7 @@ import java.util.Date;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.XML;
+
 
 public class SensorData implements Serializable {
 	
