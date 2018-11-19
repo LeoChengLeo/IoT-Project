@@ -1,5 +1,4 @@
 package ioTConnectedDevicesGateWay.labs.module8;
-
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.json.JSONObject;
@@ -16,8 +15,11 @@ public class MqttSensorEventHandler extends MqttClientConnector{
    private Float actuatorData=0.0f;    //tempActuator
    
 
-	public MqttSensorEventHandler(String protocol, String host, String port,String subTopic,String pubTopic) {
-		super(protocol,host,port);
+
+	public MqttSensorEventHandler(String host, String caFilePath, String subTopic,String pubTopic) {
+		
+		//connect to the local broker using a SSL connection
+		super(host,caFilePath,"host","host");
 		this.subscribeTopic=subTopic;
 		this.publishTopic=pubTopic;
 		this.sensorData= new SensorData();
@@ -61,8 +63,9 @@ public class MqttSensorEventHandler extends MqttClientConnector{
 			System.out.println("Succcessfully updatad new SensorData..");
 		   }catch (Exception e) 
 		   {
-			System.out.println("Fail to convert MQTT SensorMessage:"+message.toString()+"to SensorData");
+			System.out.println("Failed to convert MQTT SensorMessage:"+message.toString()+"to SensorData");
 		    System.out.println(e.getMessage());
+		    return false;
 		   }		
 			
 	  

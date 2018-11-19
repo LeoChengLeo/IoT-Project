@@ -137,16 +137,6 @@ public class SensorData implements Serializable {
 	}
 	
 	
-//	private String startedTime=null;
-//	private String timeData=null;
-//	private String type="Not Set";
-//	private float currValue=0.0f;
-//	private float avgValue=0;
-//	private float minValue=0.0f;
-//	private float maxValue=0.0f;
-//	private float totalValue=0.0f;
-//	private int count=0;
-	
 	
 	public void fromJson(JSONObject jsonSensorData)
 	{

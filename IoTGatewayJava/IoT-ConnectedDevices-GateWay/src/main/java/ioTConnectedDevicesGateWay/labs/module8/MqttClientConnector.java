@@ -8,6 +8,20 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+
 
 
 
@@ -21,17 +35,39 @@ public class MqttClientConnector implements MqttCallback {
 	protected String _clientID;
 	protected String _brokerAddr;
 	protected MqttClient _mqttClient;
-    
+    protected boolean isSecure;
+	protected String _pemFileName;
+	
+	protected String _mqttusername;
+	protected String _mqttpassword;
 	
 	
-	public MqttClientConnector(String protocol,String host, String port)
-	{		
+	
+	//use this constructor to connect the remote broker with clean session 
+	public MqttClientConnector(String protocol,String host, int port)
+	{				
+		isSecure=false;
 		_protocol=protocol;
 		_host=host;
-		_port=port;
-		
+		_port=Integer.toString(port);
 		_clientID=MqttClient.generateClientId();
-		_brokerAddr=protocol+"://"+host+":"+port;	
+		_brokerAddr=protocol+"://"+host+":"+port;
+	}
+	
+	
+	//use this constructor to connect the broker using a SSL connection
+	public MqttClientConnector(String host, String caFilePath, String mqttUserName, String mqttPassword)
+	{
+		isSecure=true;
+		_protocol="ssl";
+		_host=host;
+		_port="8883";
+		_clientID=MqttClient.generateClientId();
+		_brokerAddr=_protocol+"://"+host+":8883";
+		_pemFileName=caFilePath;
+		_mqttusername=mqttUserName;
+		_mqttpassword=mqttPassword;
+			
 	}
 	
 	
@@ -45,14 +81,25 @@ public class MqttClientConnector implements MqttCallback {
 			{
 				_mqttClient= new MqttClient(_brokerAddr, _clientID,new MemoryPersistence());
 				MqttConnectOptions option= new MqttConnectOptions();
-				option.setCleanSession(true);
+				
+				
+				if(isSecure)
+				{
+					initSecureConnection(option);
+				}
+				else
+				{
+					option.setCleanSession(true);
+				}
+				
+				
 				_mqttClient.setCallback(this);
 				_mqttClient.connect(option);
 				System.out.println("Connect to Broker:"+_brokerAddr);
+			   
 			}
 			catch(MqttException e)
 			{
-				System.out.println(e.toString());
 				System.out.println(e.getMessage());
 				
 			}
@@ -72,6 +119,51 @@ public class MqttClientConnector implements MqttCallback {
 	
 
 	
+	
+	private void initSecureConnection(MqttConnectOptions options)
+	 {
+	 try {
+		 
+		 	SSLContext sslContext = SSLContext.getInstance("SSL");
+		 	KeyStore keyStore = readCertificate();
+		    TrustManagerFactory trustManagerFactory =
+		    TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+		    trustManagerFactory.init(keyStore);
+		    sslContext.init(null, trustManagerFactory.getTrustManagers(), new SecureRandom());
+		    options.setUserName(_mqttusername);
+		    options.setPassword(_mqttpassword.toCharArray());
+		    options.setSocketFactory(sslContext.getSocketFactory());
+		    
+	 } catch (Exception e) 
+	 {
+	 
+		 System.out.println("Failed to initialize secure MQTT connection "+e.getMessage());
+	 }
+	 
+	 }
+	
+	
+	
+	
+	 private KeyStore readCertificate() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException
+	 {
+		 
+		 KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+		 FileInputStream fis = new FileInputStream(_pemFileName);
+		 BufferedInputStream bis = new BufferedInputStream(fis);
+		 CertificateFactory cf = CertificateFactory.getInstance("X.509");
+		 ks.load(null);
+		 while (bis.available() > 0) 
+		 {
+			 Certificate cert = cf.generateCertificate(bis);
+			 ks.setCertificateEntry("adk_store" + bis.available(), cert);
+	     }
+	     return ks;
+	 }
+
+	
+	
+	
 	public void disconnect()
 	{
 	   try
@@ -88,9 +180,10 @@ public class MqttClientConnector implements MqttCallback {
 	   {
 			System.out.println(e.getMessage()+" "+e.toString());
 	   }
-		
-		
+			
 	}
+	
+	
 	
 	
 	
@@ -123,7 +216,6 @@ public class MqttClientConnector implements MqttCallback {
 	}
 	
 	
-
 	
 	public boolean subscribeAll()
 	{
@@ -168,7 +260,6 @@ public class MqttClientConnector implements MqttCallback {
 	}
 	
 	
-
 
 	public void connectionLost(Throwable cause) {
 		

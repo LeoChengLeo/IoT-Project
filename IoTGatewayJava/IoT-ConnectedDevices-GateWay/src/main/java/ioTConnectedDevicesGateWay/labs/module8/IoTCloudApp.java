@@ -5,7 +5,7 @@ public class IoTCloudApp {
 
 	public static void main(String[] args) {
 	    
-		MqttSensorEventHandler sensorEventHandler= new MqttSensorEventHandler("tcp", "localhost", "1883", "sensorData", "actuatorData");
+		MqttSensorEventHandler sensorEventHandler= new MqttSensorEventHandler("localhost", "/etc/mosquitto/certs/ca.crt", "sensorData", "actuatorData");
 		sensorEventHandler.connect();
 		sensorEventHandler.subscribeSensorData(2);		
 	}

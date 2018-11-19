@@ -8,14 +8,18 @@ public class MqttPubClientApp {
 				
 		SensorData sensorData = new SensorData("Temperature");
 		sensorData.addNewValue(21);	
-		MqttClientConnector mqttPubConnector=new MqttClientConnector("tcp", "192.168.0.8", "1883");
+		
+		MqttClientConnector mqttPubConnector=new MqttClientConnector("tcp", "192.168.0.13", "1883");
+		
 		mqttPubConnector.connect();	
-		mqttPubConnector.publishMessage("ILoveCoding",0,sensorData.toXMLString().getBytes());
 		
-		mqttPubConnector.publishMessage("ILoveCoding",1,sensorData.toXMLString().getBytes());
+		mqttPubConnector.publishMessage("TempSensorData",0,sensorData.toXMLString().getBytes());
 		
-		mqttPubConnector.publishMessage("ILoveCoding",2,sensorData.toXMLString().getBytes());
+		mqttPubConnector.publishMessage("TempSensorData",1,sensorData.toXMLString().getBytes());
+		
+		mqttPubConnector.publishMessage("TempSensorData",2,sensorData.toXMLString().getBytes());
 
+		mqttPubConnector.disconnect();
 	}
 
 }
