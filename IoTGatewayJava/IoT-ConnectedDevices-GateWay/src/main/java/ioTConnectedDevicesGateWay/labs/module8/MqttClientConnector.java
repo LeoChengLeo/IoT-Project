@@ -283,7 +283,7 @@ public class MqttClientConnector implements MqttCallback {
 	
 	
 	
-    //Over write callback method when Connect lost from broker
+    //Overwrite callback method when Connect lost from broker
 	public void connectionLost(Throwable cause) {
 		
 		System.out.println("Connection lost!");
@@ -291,14 +291,14 @@ public class MqttClientConnector implements MqttCallback {
 	}
 	
 	
-	//Over write callback method when publish message delivery complete
+	//Overwrite callback method when publish message delivery complete
 	public void deliveryComplete(IMqttDeliveryToken token) {
 		
 		System.out.println("Delivery Complete!");
 		
 	}
 	
-    //Over write callback method when message arrive from subscribed Topic
+    //Overwrite callback method when message arrive from subscribed Topic
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
 		
 		System.out.println("Message Arrived MessageID:"+message.getId());

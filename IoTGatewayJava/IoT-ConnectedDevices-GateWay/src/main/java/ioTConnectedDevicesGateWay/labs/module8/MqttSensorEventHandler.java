@@ -5,6 +5,8 @@ import org.json.JSONObject;
 import ioTConnectedDevicesGateWay.labs.common.SensorData;
 
 
+//This sensorEventHandler class will subscribe sensorData from local broker 
+//and publish relevant actuatorData base on sensorEvent back to local broker
 
 public class MqttSensorEventHandler extends MqttClientConnector{
 
