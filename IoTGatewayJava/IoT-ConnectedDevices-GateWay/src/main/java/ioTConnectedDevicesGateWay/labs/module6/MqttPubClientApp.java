@@ -7,17 +7,17 @@ public class MqttPubClientApp {
 		// TODO Auto-generated method stub
 				
 		SensorData sensorData = new SensorData("Temperature");
-		sensorData.addNewValue(21);	
+		sensorData.addNewValue(30);	
 		
 		MqttClientConnector mqttPubConnector=new MqttClientConnector("tcp", "192.168.0.13", "1883");
 		
 		mqttPubConnector.connect();	
 		
-		mqttPubConnector.publishMessage("TempSensorData",0,sensorData.toXMLString().getBytes());
+		mqttPubConnector.publishMessage("iot/sensorData",0,sensorData.toJson().toString().getBytes());
 		
-		mqttPubConnector.publishMessage("TempSensorData",1,sensorData.toXMLString().getBytes());
+		mqttPubConnector.publishMessage("iot/sensorData",1,sensorData.toJson().toString().getBytes());
 		
-		mqttPubConnector.publishMessage("TempSensorData",2,sensorData.toXMLString().getBytes());
+		mqttPubConnector.publishMessage("iot/sensorData",2,sensorData.toJson().toString().getBytes());
 
 		mqttPubConnector.disconnect();
 	}

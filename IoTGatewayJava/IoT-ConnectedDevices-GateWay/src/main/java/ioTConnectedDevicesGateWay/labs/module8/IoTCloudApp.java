@@ -5,6 +5,7 @@ public class IoTCloudApp {
 
 	public static void main(String[] args) {
 	    
+		//This sensorEventHandler will subscribe to Topic sensorData from local broker and publish relevant actuatorData back to local broker 
 		MqttSensorEventHandler sensorEventHandler= new MqttSensorEventHandler("localhost", "/etc/mosquitto/certs/ca.crt", "sensorData", "actuatorData");
 		sensorEventHandler.connect();
 		sensorEventHandler.subscribeSensorData(2);		

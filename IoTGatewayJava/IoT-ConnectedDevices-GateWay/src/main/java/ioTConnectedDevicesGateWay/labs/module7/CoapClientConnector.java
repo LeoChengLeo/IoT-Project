@@ -6,12 +6,10 @@ import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.CoapHandler;
 import org.eclipse.californium.core.CoapResponse;
 import org.eclipse.californium.core.WebLink;
-
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.print.attribute.standard.PrinterLocation;
 
 
@@ -50,7 +48,8 @@ public class CoapClientConnector {
 	 
 	 public void initClient(String resourceName)
 	 {
-		 
+	
+     //Check if client is initialized if true then shutdown and reinitialize		 
 	 if (_isInitialized) 
 	 {
 		 _logger.info("Reinitialized coap_client....");
@@ -58,10 +57,10 @@ public class CoapClientConnector {
 	     coap_client=null;
 	 }
 	 
-	 
-	 
+	 	 
 	 try
-	 {	
+	 {	 
+		// set URL for Coap client to use
 		_currentURL=_serverAddr+"/"+resourceName; 
 		coap_client= new CoapClient(_currentURL);
 		_logger.info("Connection established with server/resource "+_serverAddr);
@@ -76,12 +75,12 @@ public class CoapClientConnector {
 	 
 	 
 	 
-	 
+	 // Implement CoapClient ping method
 	 public void pingServer()
 	 {
 		 _logger.info("ping server.....");
 		 
-		 initClient(null);
+		 initClient(null); 
 		 
 		 if(coap_client.ping())
 		 {
@@ -95,10 +94,12 @@ public class CoapClientConnector {
 	 }
 	 
 		 
+	 //Discover all available resources from CoapServer
 	 public void discoverResources()
 	 {
 		 
 		 initClient(null);
+		 
 		 _logger.info("Descovering avaliable resources");
          
 		 Set<WebLink> webLinks=coap_client.discover();
@@ -118,15 +119,18 @@ public class CoapClientConnector {
 	 }
 	 
 	 
-	 
+	 //Implement sending Coap GetRequest method
 	 public CoapResponse sendGetRequest(String resource, boolean useCON)
 	 {
 		 
 	   initClient(resource);
+	   
+	   ////Set using CONS OR NONS
 	   if(useCON){coap_client.useCONs();}
 	   else      {coap_client.useNONs();}
 		
 	   _logger.info("Sending get request to "+getCurrentURL());
+	   //Send Coap GetRequest
 	   CoapResponse respone= coap_client.get();
 	   
 	   if(respone!=null)
@@ -146,11 +150,13 @@ public class CoapClientConnector {
 	 
 	 	 
 
-	 
+	 //Implement sending Coap PostRequest method
 	 public CoapResponse sendPostRequest(String payload,String resource,boolean useCON)
 	 {
 		 
-		 initClient(resource);  
+		 initClient(resource);
+		 
+		//Set using CONS OR NONS
 		 if(useCON){coap_client.useCONs();}
 		 else      {coap_client.useNONs();}
 	     
@@ -172,11 +178,13 @@ public class CoapClientConnector {
 	 }
 	 
 	 
-	 
+	 //Implement sending Coap DeleteRequest method
 	 public CoapResponse sendDeleteRequest(String resource,boolean useCON)
 	 {
 		 
-		 initClient(resource);  
+		 initClient(resource); 
+		 
+		//Set using CONS OR NONS
 		 if(useCON){coap_client.useCONs();}
 		 else      {coap_client.useNONs();}
 	     
@@ -198,11 +206,13 @@ public class CoapClientConnector {
 	 }
 	 
 	 
-	 
+	//Implement sending Coap PutRequest method
 	 public CoapResponse sendPutRequest(String payload, String resource,boolean useCON)
 	 {
 		 
-		 initClient(resource);  
+		 initClient(resource); 
+		 
+		//Set using CONS OR NONS
 		 if(useCON){coap_client.useCONs();}
 		 else      {coap_client.useNONs();}
 	     
@@ -225,17 +235,19 @@ public class CoapClientConnector {
 	 
 	 
 	 
-		 
+     //Sending Coap GetRequest with handler which will be observing the specific resource on the coap Server
 	 public CoapResponse sendGetwithHandler(String Resource, boolean useCON, CoapHandler handler,boolean enableWait)
 	 {
 		 	
 		   initClient(Resource);
+		   
 		   _logger.info("Adding CoapHandler to coap_client....");
 		   
+		   //Set wait or not
 		   if(enableWait) {coap_client.observeAndWait(handler);}
 		   else           {coap_client.observe(handler);}
 		   
-		   
+		   //Set using CONS OR NONS
 		   if(useCON){coap_client.useCONs();}
 		   else      {coap_client.useNONs();}
 		   

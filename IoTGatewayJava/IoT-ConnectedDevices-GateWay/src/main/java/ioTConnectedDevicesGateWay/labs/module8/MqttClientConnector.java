@@ -46,7 +46,7 @@ public class MqttClientConnector implements MqttCallback {
 	//use this constructor to connect the remote broker with clean session 
 	public MqttClientConnector(String protocol,String host, int port)
 	{				
-		isSecure=false;
+		 isSecure=false;
 		_protocol=protocol;
 		_host=host;
 		_port=Integer.toString(port);
@@ -58,7 +58,7 @@ public class MqttClientConnector implements MqttCallback {
 	//use this constructor to connect the broker using a SSL connection
 	public MqttClientConnector(String host, String caFilePath, String mqttUserName, String mqttPassword)
 	{
-		isSecure=true;
+		 isSecure=true;
 		_protocol="ssl";
 		_host=host;
 		_port="8883";
@@ -83,13 +83,13 @@ public class MqttClientConnector implements MqttCallback {
 				MqttConnectOptions option= new MqttConnectOptions();
 				
 				
-				if(isSecure)
+				if(isSecure) 
 				{
-					initSecureConnection(option);
+					initSecureConnection(option);//set mqtt Secure Connect option
 				}
 				else
 				{
-					option.setCleanSession(true);
+					option.setCleanSession(true);//set option to clean session
 				}
 				
 				
@@ -156,7 +156,7 @@ public class MqttClientConnector implements MqttCallback {
 		 while (bis.available() > 0) 
 		 {
 			 Certificate cert = cf.generateCertificate(bis);
-			 ks.setCertificateEntry("adk_store" + bis.available(), cert);
+			 ks.setCertificateEntry("conndev_store" + bis.available(), cert);
 	     }
 	     return ks;
 	 }
@@ -260,20 +260,45 @@ public class MqttClientConnector implements MqttCallback {
 	}
 	
 	
-
+	
+	public boolean unsubscribeTopic(String topic)
+	{
+		
+        try
+        {       	
+        _mqttClient.unsubscribe(topic);
+		System.out.println("Unsubscribed to Topic:"+topic);
+		return true;
+        }
+        catch(MqttException e)
+        {
+			System.out.println("Failed to unSubscribe Topic:"+topic);
+			System.out.println(e.getMessage());
+        }
+		
+		return false;
+		
+	}
+	
+	
+	
+	
+    //Over write callback method when Connect lost from broker
 	public void connectionLost(Throwable cause) {
 		
 		System.out.println("Connection lost!");
 		
 	}
 	
+	
+	//Over write callback method when publish message delivery complete
 	public void deliveryComplete(IMqttDeliveryToken token) {
 		
-		System.out.println("Delievey Complete!");
+		System.out.println("Delivery Complete!");
 		
 	}
 	
-
+    //Over write callback method when message arrive from subscribed Topic
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
 		
 		System.out.println("Message Arrived MessageID:"+message.getId());

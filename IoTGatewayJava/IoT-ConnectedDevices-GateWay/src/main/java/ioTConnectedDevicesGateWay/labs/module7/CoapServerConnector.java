@@ -1,12 +1,12 @@
 package ioTConnectedDevicesGateWay.labs.module7;
 
-import java.util.logging.Logger;
 import org.eclipse.californium.core.CoapResource;
 import org.eclipse.californium.core.CoapServer;
 
 public class CoapServerConnector {
 	
 	private CoapServer coapServer;
+	
 	
 	public CoapServerConnector() 
 	{
@@ -35,11 +35,6 @@ public class CoapServerConnector {
 	{
 		coapServer.stop();
 	}
-	
-	public void addEndPoint()
-	{
 		
-	}
-	
 
 }

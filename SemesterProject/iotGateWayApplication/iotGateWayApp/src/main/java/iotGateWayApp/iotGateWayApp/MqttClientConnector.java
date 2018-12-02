@@ -65,7 +65,6 @@ public class MqttClientConnector implements MqttCallback {
 	}
 	
 	
-	
 	public void connect() 
 	{
 		if(_mqttClient==null)
@@ -188,9 +187,9 @@ public class MqttClientConnector implements MqttCallback {
 			MqttMessage message= new MqttMessage();
 			message.setPayload(payload);
 			message.setQos(qos);
-			System.out.println("Publishing message...");
+			System.out.println("Publishing message to topic:"+topic+"...");
 			_mqttClient.publish(topic, message);
-			System.out.println("Published Success! MqttMessageID:"+message.getId());
+			System.out.println("Successfully published message to topic:"+topic+" MqttMessageID:"+message.getId());
 			return true;
 			
 		}

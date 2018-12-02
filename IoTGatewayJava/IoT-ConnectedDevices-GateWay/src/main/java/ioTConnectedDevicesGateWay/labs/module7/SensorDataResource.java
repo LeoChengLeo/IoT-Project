@@ -14,8 +14,11 @@ public class SensorDataResource extends CoapResource {
 	
 	private SensorData sensorDataResource=new SensorData();
 	
+	
+	
 	public SensorDataResource(String name) {
 		super(name);
+        //Make SensorData Resource Observable
 		setObservable(true);
 		setObserveType(Type.CON);
 		getAttributes().setObservable();
@@ -33,7 +36,7 @@ public class SensorDataResource extends CoapResource {
 		}
 		else
 	    {
-			exchange.respond(sensorDataResource.toJson().toString());
+			exchange.respond(sensorDataResource.toJson().toString()); //Return current SensorData 
 	    }
 		
 	}
@@ -48,11 +51,12 @@ public class SensorDataResource extends CoapResource {
 		try
 		{   
 			JSONObject jsonSensorData= new JSONObject(payload);
+			//Updated or created new SensorData
 			sensorDataResource.fromJson(jsonSensorData);
 			System.out.println("New SensorData updated...");
 			System.out.println(payload);
 			exchange.respond(ResponseCode.CREATED);
-			changed(); //notify the observer when new sensorData update
+			changed(); //notify the observer when new sensorData is updated or created
 		}
 		catch(Exception e)
 		{
@@ -64,14 +68,15 @@ public class SensorDataResource extends CoapResource {
 		
 	}
 	
+	
 	@Override
 	public void handlePUT(CoapExchange exchange) {
 	    
 		System.out.println("PUT request from:"+exchange.getSourceAddress());
 		exchange.respond(ResponseCode.CHANGED);
-		
-		
+			
 	}
+	
 	
 	@Override
 	public void handleDELETE(CoapExchange exchange) {

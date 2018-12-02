@@ -3,22 +3,23 @@ import ioTConnectedDevicesGateWay.labs.common.*;
 
 public class TempSensorPubApp {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) 
+	{
 		
 				
        runUbidotsBrokerTest();
-       runMyBrokerTest();
+ 
 
 	}
 	
 	
-	
+	// AWS Cloud Integration Pub Test
 	public static void runMyBrokerTest()
 	{
 		SensorData sensorData = new SensorData("Temperature");
 		sensorData.addNewValue(10);
 		
-		//connect to the broker using a SSL connection
+		//connect to the mosquitto broker which running on AWS ec2 instance using a SSL connection
 		 MqttClientConnector mqttPubConnector=new MqttClientConnector("leochengleo-cloud-service.me", "c:/users/leo/Documents/myMqttca.pem","leoCheng","0000");
 		 mqttPubConnector.connect();	
 		
@@ -36,10 +37,11 @@ public class TempSensorPubApp {
 	}
 	
 	
-	
+	// Ubidots Cloud Integration Pub Test
 	public static void runUbidotsBrokerTest()
 	{
 		
+		//connect to the ubidots broker using a SSL connection
 		MqttClientConnector mqttPub= new MqttClientConnector("things.ubidots.com","C:\\Users\\Leo\\Documents\\ubidots.pem.txt","A1E-61Hbn9CAL7B1M8pmDKiOP4GYggAl9c","");
 		mqttPub.connect();
 		

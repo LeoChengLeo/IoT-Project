@@ -168,6 +168,26 @@ public class MqttClientConnector implements MqttCallback {
 	}
 	
 	
+	public boolean unsubscribeTopic(String topic)
+	{
+		
+        try
+        {       	
+        _mqttClient.unsubscribe(topic);
+		System.out.println("Unsubscribed to Topic:"+topic);
+		return true;
+        }
+        catch(MqttException e)
+        {
+			System.out.println("Failed to unSubscribe Topic:"+topic);
+			System.out.println(e.getMessage());
+        }
+		
+		return false;
+		
+	}
+	
+	
 
 
 	public void connectionLost(Throwable cause) {

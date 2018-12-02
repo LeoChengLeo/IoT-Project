@@ -2,8 +2,9 @@ package ioTConnectedDevicesGateWay.labs.module8;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.json.JSONObject;
-
 import ioTConnectedDevicesGateWay.labs.common.SensorData;
+
+
 
 public class MqttSensorEventHandler extends MqttClientConnector{
 
@@ -87,13 +88,14 @@ public class MqttSensorEventHandler extends MqttClientConnector{
 	}
 	
 	
-	
+	//Custom publish method
 	public boolean publishActuatorMessage(int qos) 
 	{                                                  
 		return super.publishMessage(publishTopic, qos,Float.toString(actuatorData).getBytes());
 	}
 	
 	
+	//Custom subscribe method
 	public boolean subscribeSensorData(int qos) 
 	{		
 		return super.subscribeTopic(subscribeTopic, qos);
