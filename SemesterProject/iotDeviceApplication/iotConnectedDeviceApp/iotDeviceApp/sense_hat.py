@@ -13,6 +13,7 @@ class SenseHat:
         
     def clear(self):
         self.clearFlag = True
+        print("senseHatLED CLEAR..")
         
     def get_humidity(self):
         return 48.5
@@ -43,5 +44,6 @@ class SenseHat:
         return None
     
     def set_pixels(self,image):
+        print("SenseHatLED pixels is printed")
         return None
 

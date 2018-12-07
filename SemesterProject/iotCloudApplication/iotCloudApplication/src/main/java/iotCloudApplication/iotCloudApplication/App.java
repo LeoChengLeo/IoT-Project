@@ -1,95 +1,41 @@
 package iotCloudApplication.iotCloudApplication;
 
-import org.apache.http.HttpResponse;
+import java.util.logging.Logger;
+import java.sql.Timestamp;
 
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.ClasspathPropertiesFileCredentialsProvider;
-import com.amazonaws.services.sns.AmazonSNSClient;
-import com.amazonaws.services.sns.model.PublishRequest;
-import com.amazonaws.services.sns.model.PublishResult;
+
+/*
+ * This application is running on an AWS ec2 instance with Mosquitto broker set up. 
+ * This app is responsible for bridging local application and data to cloud base services (HTTP Web Service, Data Storage, Lambda). 
+ * This app will listen on variable “temperature sensor data”. As temperature sensor data arrive from local gateway, 
+ * it will trigger a HTTP client to send a post request to IoT Web Service Server for saving a new sensor data to the database 
+ * and as the post request send, it will publish this new temperature sensor data to AWS SNS Topic for triggering lambda function to send email notification (SMTP) to user.      
+ * 
+ */
+
 
 public class App 
 {
+	
+	private static final Logger _logger= Logger.getLogger("IoTCloudManagementApp");
+	
     public static void main( String[] args )
     {
+    	
+    	
+    	_logger.info("Starting Cloud Management Application"+new Timestamp(System.currentTimeMillis()).toString());
+    	
 		MqttMessageHandler sensorEventHandler= new MqttMessageHandler("tcp",
-				                                                      "52.207.33.252", 
+				                                                      "34.238.168.201", 
 				                                                      1883, 
 				                                                      "iot/cloud/sensorData/temperature", 
 				                                                      "arn:aws:sns:us-east-1:398590284929:IoTSensorDataNotification",
-				                                                      "https://csye6225-fall2018-chengl.me:8080/csye6225Webapp-1.0-SNAPSHOT/iotService/SensorData"
+				                                                      "https://csye6225-fall2018-chengl.me:8080/csye6225Webapp-1.0-SNAPSHOT/iotService/sensorData"
 				                                                      );
 		sensorEventHandler.connect();
 		sensorEventHandler.subscribeSensorData(1);
-         	
-    }
-    
-      
-
-    
-    private static void testPostSensorData()
-    {
-    	SensorData sensorData= new SensorData("Temperature");
-    	sensorData.addNewValue(21.23f);
-    	
-        try 
-        {
-        	CloseableHttpClient client = HttpClientBuilder.create().build();
-        	
-            HttpPost request = new HttpPost("https://csye6225-fall2018-chengl.me:8080/csye6225Webapp-1.0-SNAPSHOT/iotService/SensorData");          
-            request.setHeader("Content-Type", "application/json");
-            request.setEntity(new StringEntity(sensorData.toJson().toString(2)));
-            HttpResponse response = client.execute(request);
-            System.out.println(response.toString());
-            
-        }catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-    	
-    }
-    
-    
-    
-    private static void testPublishSNSTopic()
-    {
-    	
-    	SensorData sensorData= new SensorData("Temperature");
-    	sensorData.addNewValue(21.23f);
     	
     	
-    	//Set awsCredential
-        AWSCredentialsProvider awsCredentialsProvider= new ClasspathPropertiesFileCredentialsProvider();
-        AWSCredentials awsCredentials=awsCredentialsProvider.getCredentials();
-        
-        AmazonSNSClient snsClient= new AmazonSNSClient(awsCredentials);
-        String topicARN= "arn:aws:sns:us-east-1:398590284929:IoTSensorDataNotification";
-       
-
-        PublishRequest publishRequest=new PublishRequest(topicARN,sensorData.toJson().toString());
-
-        try
-        {
-            PublishResult publishResult=snsClient.publish(publishRequest);
-            System.out.println("Successfully publish message to SNS Topic");
-           
-        }
-        catch (Exception e)
-        {
-            System.out.println("Failed to publish userName and token..."+e.toString()+" "+e.getMessage());
-           
-        }        
-        
-
-    	
-    	
-    }
-    
-    
-    
+    }    
     
 }

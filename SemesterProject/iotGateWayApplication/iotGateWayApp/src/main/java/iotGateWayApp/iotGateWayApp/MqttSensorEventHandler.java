@@ -1,4 +1,7 @@
 package iotGateWayApp.iotGateWayApp;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.json.JSONObject;
@@ -11,11 +14,14 @@ public class MqttSensorEventHandler extends MqttClientConnector{
    private String pubTopicToGateway;
    private String pubTopicToCloud;
    
-   private MqttClientConnector sensorDataTransfer;
+   /* This sensorDataTransfer will transfer the sensorData to cloud by publishing sensorData to remote Mqtt broker */
+   private MqttClientConnector sensorDataTransfer;  
    
    private SensorData currentSensorData;      //tempSensor
    private Float currentActuatorData=0.0f;    //tempActuator
    
+   private static final Logger _logger= Logger.getLogger(MqttSensorEventHandler.class.getName());
+	
 
 
 	public MqttSensorEventHandler(String protocol,String localhost, String remoteHost, int port, String subTopic,String pubTopic,String pubTopicToCloud) 
@@ -35,59 +41,67 @@ public class MqttSensorEventHandler extends MqttClientConnector{
 	
 	
 	
+	//Overwrite call back method, custom method when connection lost from local gateway broker
 	@Override
 	public void connectionLost(Throwable cause) {
-		super.connectionLost(cause);
-		System.out.println("Lost connection to broker:"+_brokerAddr);
 		
+		super.connectionLost(cause);
+
 	}
 	
+	//Overwrite call back method, custom method when actuatorData successfully publish back to local gateway broker 
 	@Override
 	public void deliveryComplete(IMqttDeliveryToken token) {
 		super.deliveryComplete(token);
-		System.out.println("Successfully publish to topic "+pubTopicToGateway);
+		_logger.info("Successfully publish to topic "+pubTopicToGateway);
 	}
 	
-	
+	//Overwrite call back method, custom method when sensorData arrive from local gateway broker, then trigger method "handleSensorEvent"  
 	@Override
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
+		
 		super.messageArrived(topic, message);
-		System.out.println("Message Arrived from Topic "+subTopicFromGateway);
-		if(!handleSensorEvent(message)) {System.out.println("Failed to handle gatewayEvent");}
+		
+		if(!handleSensorEvent(message)) { _logger.log(Level.SEVERE,"Failed to handle gatewayEvent");}
 	}
 	
 	
     
-	
+	//This method will be called when call back method "messageArrived" is triggered
 	private boolean handleSensorEvent(MqttMessage message)
 	{   		
 		   JSONObject sensorjsonMessage=null;
 		 
 		   try
 		   {
-		   //New SensorData arrive and fresh new sensorData from json
+			   
+		   //New SensorData arrive and fresh new sensorData from json String
 			sensorjsonMessage=new JSONObject(message.toString());
 			currentSensorData.fromJson(sensorjsonMessage);
-			System.out.println("Succcessfully updatad new SensorData..");
+			_logger.info("Succcessfully updatad new SensorData..");
+			
 		   }catch (Exception e) 
 		   {
-			System.out.println("Failed to convert MQTT SensorMessage:"+message.toString()+"to SensorData");
-		    System.out.println(e.getMessage());
+			
+			_logger.log(Level.SEVERE,"Failed to convert MQTT SensorMessage:"+message.toString()+"to SensorData "+e.getMessage());   
 		    return false;
 		   }		
 			
 	  
-		if(currentSensorData.getCurrValue()>25)       // First sensorEvent 
+		if(currentSensorData.getCurrValue()>25)       // First sensorEvent, temperature will be lowered 
 		{
-		   currentActuatorData=(currentSensorData.getAvgValue()-currentSensorData.getCurrValue());			   
+		   currentActuatorData=(25-currentSensorData.getCurrValue());
+		   _logger.info("Updated new temperature Acutator data...."+"TempActuatorData="+currentActuatorData);
 		}
-		else if(currentSensorData.getCurrValue()<20)  // Second sensorEvent 
+		else if(currentSensorData.getCurrValue()<22)  // Second sensorEvent, temperature will be increased
 		{
-			currentActuatorData=(currentSensorData.getAvgValue()-currentSensorData.getCurrValue());
+			currentActuatorData=(22-currentSensorData.getCurrValue());
+		   _logger.info("Updated new temperature Acutator data...."+"TempActuatorData="+currentActuatorData);
 		}
 		else
 		{
-			currentActuatorData=0.0f;
+			currentActuatorData=0.0f;                 // No sensorEvent match
+			_logger.info("No sensor events matched "+"TempActuatorData="+currentActuatorData);
 		}		
 		
 		return pubActuatorDataToGateway(2)&&pubSensorDataToCloud(2); //Publish actuatorData back to broker and transfer sensorData to remote cloud 
@@ -96,7 +110,7 @@ public class MqttSensorEventHandler extends MqttClientConnector{
 	
 	
 	
-	//Publish actuatorData back to local Broker
+	//Publish actuatorData back to local gateway Broker
 	public boolean pubActuatorDataToGateway(int qos) 
 	{                                                  
 		return super.publishMessage(pubTopicToGateway, qos,Float.toString(currentActuatorData).getBytes());

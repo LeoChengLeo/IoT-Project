@@ -14,7 +14,7 @@ class MqttClientConnector():
     _brokerAddr=None
     _mqttClient=None
     
-    
+    #Allow user to use this constructor to pass custom callBack methods
     def __init__(self,host,port,on_connect,on_message,on_publish,on_subscribe):
                   
         self._brokerAddr=host+":"+str(port)
@@ -22,6 +22,7 @@ class MqttClientConnector():
         self._port=port
         
         self._mqttClient=Client()
+        
         self._mqttClient.on_connect=on_connect
         self._mqttClient.on_message=on_message
         self._mqttClient.on_publish=on_publish
@@ -33,7 +34,7 @@ class MqttClientConnector():
             
         try:
                     
-            print("Connect to broker:"+self._brokerAddr+".....")
+            print("Connecting to broker:"+self._brokerAddr+".....")
             self._mqttClient.connect(self._host,self._port, 60)
             self._mqttClient.loop_start()
                 
@@ -47,8 +48,7 @@ class MqttClientConnector():
         self._mqttClient.disconnect()
         self._mqttClient.loop_stop()
         
-        
-        
+               
     def publishMessage(self,topic,message,qos):
         
         print("Publishing message:"+message+" to broker: "+self._brokerAddr+" Topic:"+topic)
@@ -62,17 +62,6 @@ class MqttClientConnector():
    
     
     
-# sensorData=SensorData("Temperature")
-# mqttPublisher=MqttClientConnector("192.168.0.28", 1883)
-# 
-# mqttPublisher.connect()
-# mqttPublisher.subscribeTopic("iot/sensorData", 0)
-# 
-# mqttPublisher.publishMessage("iot/sensorData",str(sensorData.toDict()),0)
-# 
-# 
-# while True:
-#     pass
 
 
 

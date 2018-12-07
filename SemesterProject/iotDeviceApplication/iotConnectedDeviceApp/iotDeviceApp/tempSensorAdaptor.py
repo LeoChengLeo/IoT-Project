@@ -11,6 +11,7 @@ from sensorData import SensorData
 import sense_hat
 
 class TempSensorAdaptor(Thread):
+    
     deviceConfigReader=None
     tempSensorEmulator=None
     enableTempEmulator=False 
@@ -26,7 +27,7 @@ class TempSensorAdaptor(Thread):
         self.currentSensorData=SensorData("Temperature")
         #SensorEmulator simulates temperature range from 25 degree to 15 degree 
         #temperature is changed after a random period of time in range 10 sec to 1 sec
-        self.tempSensorEmulator=SensorEmulator(25, 15, 10, 1)
+        self.tempSensorEmulator=SensorEmulator(30, 15, 10, 1)
         self.tempSensorEmulator.daemon=True  
         self.tempSensorEmulator.start() 
         
@@ -51,7 +52,7 @@ class TempSensorAdaptor(Thread):
 
            
     def setflagEnableTempEmulator(self,enableTempEmulator):
-        self.tempSensorEmulator=enableTempEmulator
+        self.enableTempEmulator=enableTempEmulator
         self.tempSensorEmulator.enableTempEmulator=enableTempEmulator
 
 

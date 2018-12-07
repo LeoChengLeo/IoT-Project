@@ -46,6 +46,7 @@ public class MqttClientConnector implements MqttCallback {
 				_mqttClient= new MqttClient(_brokerAddr, _clientID,new MemoryPersistence());
 				MqttConnectOptions option= new MqttConnectOptions();
 				option.setCleanSession(true);
+				option.setConnectionTimeout(20);
 				_mqttClient.setCallback(this);
 				_mqttClient.connect(option);
 				System.out.println("Connect to Broker:"+_brokerAddr);
@@ -68,6 +69,21 @@ public class MqttClientConnector implements MqttCallback {
 		}
 		
 		
+	}
+	
+	
+	
+	public void close() 
+	{
+		
+		try 
+		{
+			_mqttClient.close();
+		}
+		catch (Exception e) {
+			System.out.println("Could not close _mqttClient thread....");
+		}
+			
 	}
 	
 
@@ -198,7 +214,8 @@ public class MqttClientConnector implements MqttCallback {
 	
 	public void deliveryComplete(IMqttDeliveryToken token) {
 		
-		System.out.println("Delievey Complete!");
+		System.out.println("Delievey Complete !");
+		
 		
 	}
 	

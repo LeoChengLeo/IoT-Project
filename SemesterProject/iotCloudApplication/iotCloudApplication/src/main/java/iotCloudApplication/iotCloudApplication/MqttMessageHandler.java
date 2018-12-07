@@ -15,19 +15,21 @@ import com.amazonaws.auth.ClasspathPropertiesFileCredentialsProvider;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.PublishResult;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class MqttMessageHandler extends MqttClientConnector{
 
 	
-   private String subscribeTopic;      
-   private String publishTopic;
-   private SensorData sensorData; 
-   private String  httpPostServiceURL;
+   private String subscribeTopic;       //Subscribe TempSensorData      
+   private String publishTopic;         //AWS SNS Topic
+   private SensorData sensorData;       //current TempSensorData
+   private String  httpPostServiceURL;  //webServiceApp URL, HTTP Post TempSensorData Request 
  
-   
+   private static final Logger _logger= Logger.getLogger(MqttClientConnector.class.getName());
 
 	public MqttMessageHandler(String protocol, String host, int port,String subTopic,String pubTopic,String httpPostServiceURL) {
+		
 		super(protocol,host,port);
 		this.subscribeTopic=subTopic;
 		this.publishTopic=pubTopic;
@@ -53,86 +55,79 @@ public class MqttMessageHandler extends MqttClientConnector{
 	
 	
 	
-	@Override
-	public void connectionLost(Throwable cause) {
-		super.connectionLost(cause);
-		System.out.println("Lost connection to broker:"+_brokerAddr);
-		
-	}
 	
-	@Override
-	public void deliveryComplete(IMqttDeliveryToken token) {
-		super.deliveryComplete(token);
-		System.out.println("Successfully publish message to topic "+publishTopic);
-	}
-	
-	
-	@Override
+	@Override//Overwrite callback messageArrived, Custom method when new temperature sensorData arrive, then triggering private method "handleMessage"
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
+		
 		super.messageArrived(topic, message);
-		System.out.println("Message Arrived from Topic "+subscribeTopic);
 		
 		if(!handleMessage(message))
 		{
-			System.out.println("Failed to handle mqtt message "+message.toString());
+			_logger.log(Level.SEVERE,"Failed to handle MQTT message "+message.toString());
+		
 		}		
 	}
 	
-	
-
-	
+		
 	private boolean handleMessage(MqttMessage message)
 	{   		
 		   JSONObject sensorjsonMessage=null;
 		 
 		   try
 		   {
-		   //New SensorData arrive and fresh new sensorData from json
+			   
+		    //New SensorData arrive and fresh new sensorData from json
 			sensorjsonMessage=new JSONObject(message.toString());
 			sensorData.fromJson(sensorjsonMessage);
-			System.out.println("Succcessfully updatad new SensorData..");
+			_logger.info("Succcessfully updatad new SensorData");
+			
 		   }catch (Exception e) 
 		   {
-			System.out.println("Fail to convert MQTT SensorMessage:"+message.toString()+"to SensorData");
-		    System.out.println(e.getMessage());
+			   
+			_logger.log(Level.SEVERE,"Fail to convert MQTT SensorMessage:"+message.toString()+"to SensorData "+e.getMessage());
 		    return false;
 		   }
 		   
-		   //Publish SensorData to AWS SNS Topic and send HTTPPost Request to cloud Web server
-		   return publishSensorDataToSNS(sensorData.toJson().toString())&&uploadSensorDataToDB();
+		   //Send HTTPPost Request to cloud Web server for saving sensorData to DataBase
+		   //Publish SensorData to AWS SNS Topic for triggering lambdaFunction to send notification email 
+		   return uploadSensorDataToDB()&&publishSensorDataToSNS(sensorData.toJson().toString());
 		   	   
 	}
 	
 	
 	
-	//Publish SensorData to Aws SNS Topic for tiggering lambda function to send senorData Notification email
+	//Publish SensorData to AWS SNS Topic for triggering lambda function to send senorData Notification email
 	private boolean publishSensorDataToSNS(String snsMessage) 
 	{                                                  
 		
 		try
 		{
-			
-			
+					
 		   	//Set awsCredential
 	        AWSCredentialsProvider awsCredentialsProvider= new ClasspathPropertiesFileCredentialsProvider();
 	        AWSCredentials awsCredentials=awsCredentialsProvider.getCredentials();
 	        
+	        //Set aws SNSClient
 	        AmazonSNSClient snsClient= new AmazonSNSClient(awsCredentials);
-	              
+	        
+	        //Set aws SNS publish request
 	        PublishRequest publishRequest=new PublishRequest(publishTopic,snsMessage);
 
-	            System.out.println("Publishing Temperature sensorData to SNS Topic....");
-	            PublishResult publishResult=snsClient.publish(publishRequest);
-	            System.out.println(publishRequest.getMessage());
-	            System.out.println("Successfully publish message to SNS Topic");
+	        _logger.info("Publishing Temperature sensorData to SNS Topic: "+publishTopic);
+	        
+	        //Publish temperature sensor Data to aws SNS Topic for triggering EmailNotification lambda function
+	        PublishResult publishResult=snsClient.publish(publishRequest);
+	            
+	        _logger.info(" Successfully publish message to SNS Topic:"+publishTopic+" "+publishRequest.getMessage());
 	           
-	            return true;
+	        return true;
 		}
 	    catch (Exception e) 
 		{
 	
-		       System.out.println("Failed to publish Message to SNS topic "+publishTopic+" "+e.getMessage());
-		       return false;
+		    _logger.log(Level.SEVERE,"Failed to publish Message to SNS topic "+publishTopic+" "+e.getMessage());   
+	 
+		    return false;
 		}
 	}
 	
@@ -146,37 +141,40 @@ public class MqttMessageHandler extends MqttClientConnector{
 				
 		try
 		{
-						
+			//Set a Closeable Http client			
 			CloseableHttpClient client = HttpClientBuilder.create().build();
+			
+			//Set a HTTP Post request with content type json
             HttpPost request = new HttpPost(httpPostServiceURL);
             request.setHeader("Content-Type", "application/json");
             request.setEntity(new StringEntity(sensorData.toJson().toString())); 
             
-            System.out.println("Sending post request to "+httpPostServiceURL);
-            
+            //Send HTTP Post request
+            _logger.info("Sending post request "+httpPostServiceURL);
             HttpResponse response = client.execute(request);
         
+            //Check if response code is 201 "created"
             if(response.getStatusLine().getStatusCode()==201)
             {
-            	System.out.println("Successfully uploaded new sensorData to DataBase....");
+            	_logger.info("Successfully uploaded new temperature sensorData to DataBase");
             	return true;
             }
            
-            System.out.println("Failed to upload sensorData to DataBase "+response.toString());
-            return false;
+               _logger.log(Level.SEVERE,"Failed to upload temperature sensorData to DataBase "+response.toString());
+               return false;
             
 		    	
 		}
 		catch (Exception e) 
 		{
-	         System.out.println("Failed to upload sensorData to DataBase"+e.getMessage());		
+			  _logger.log(Level.SEVERE,"Failed to upload temperature sensorData to DataBase "+e.getMessage());		
 	         return false;
 		}
 	}
 	
 	
 	
-	
+	//Custom Subscribe Method for listening on any new temperature sensorData 
 	public boolean subscribeSensorData(int qos) 
 	{		
 		return super.subscribeTopic(subscribeTopic, qos);

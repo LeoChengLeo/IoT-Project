@@ -19,6 +19,9 @@ import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
@@ -38,7 +41,7 @@ public class MqttClientConnector implements MqttCallback {
     protected boolean isSecure;
 	protected String _pemFileName;
 	
-	
+	private static final Logger _logger= Logger.getLogger(MqttClientConnector.class.getName());
 	
 	//use this constructor to connect the remote broker with clean session 
 	public MqttClientConnector(String protocol,String host, int port)
@@ -88,24 +91,24 @@ public class MqttClientConnector implements MqttCallback {
 				
 				_mqttClient.setCallback(this);
 				_mqttClient.connect(option);
-				System.out.println("Connect to Broker:"+_brokerAddr);
-			 
+				
+				_logger.info("Successfully connect to Broker:"+_brokerAddr);			 
 			}
 			catch(MqttException e)
 			{
-				System.out.println(e.toString());
-				System.out.println(e.getMessage());
+				
+				_logger.info("Failed to connect to broker "+_brokerAddr+" "+e.getMessage());
 				
 			}
 			catch(Exception e)
 			{
-				System.out.println(e.getMessage()+" "+e.toString());
+				_logger.info("Failed to connect to broker "+_brokerAddr+" "+e.getMessage());
 			}
 			
 		}
 		else
 		{
-			System.out.println("MqttClient has not been intialized");
+			_logger.warning("MqttClient has not been intialized");
 		}
 		
 		
@@ -115,7 +118,7 @@ public class MqttClientConnector implements MqttCallback {
 	
 	
 	private void initSecureConnection(MqttConnectOptions options)
-	 {
+    {
 	 try {
 		 
 		 	SSLContext sslContext = SSLContext.getInstance("SSL");
@@ -129,7 +132,8 @@ public class MqttClientConnector implements MqttCallback {
 	 } catch (Exception e) 
 	 {
 	 
-		 System.out.println("Failed to initialize secure MQTT connection "+e.getMessage());
+		 _logger.log(Level.SEVERE,"Failed to initialize secure MQTT connection "+e.getMessage());
+
 	 }
 	 
 	 }
@@ -161,16 +165,17 @@ public class MqttClientConnector implements MqttCallback {
 	   try
 	   {
 		   _mqttClient.disconnect();
-		   System.out.println("MqttClient disconnect from:"+_brokerAddr);
+		   _logger.info("MqttClient disconnected from:"+_brokerAddr);
+		   
 	   }
 	   catch(MqttException e)
-	   {
-		   System.out.println(e.toString());
-		   System.out.println(e.getMessage());
+	   {		  
+		   _logger.log(Level.SEVERE,"Failed to disconnect from broker "+_brokerAddr+" "+e.getMessage());
+		   
 	   }
 	   catch(Exception e)
 	   {
-			System.out.println(e.getMessage()+" "+e.toString());
+		   _logger.log(Level.SEVERE,"Failed to disconnect from broker "+_brokerAddr+" "+e.getMessage());
 	   }
 			
 	}
@@ -187,20 +192,25 @@ public class MqttClientConnector implements MqttCallback {
 			MqttMessage message= new MqttMessage();
 			message.setPayload(payload);
 			message.setQos(qos);
-			System.out.println("Publishing message to topic:"+topic+"...");
+			
+			_logger.info("Publishing message to topic:"+topic+"...");
+			
 			_mqttClient.publish(topic, message);
-			System.out.println("Successfully published message to topic:"+topic+" MqttMessageID:"+message.getId());
+			
+			_logger.info("Successfully published message to topic:"+topic+" MqttMessageID:"+message.getId());
+			
 			return true;
 			
 		}
 		catch (MqttException e)
 		{
-			System.out.println(e.toString());
-			System.out.println(e.getMessage());
+						
+		   _logger.log(Level.SEVERE,"Failed to publish message to broker "+ _brokerAddr+ " topic:"+topic+" "+e.getMessage());
+		
 		}
 		catch(Exception e)
 		{
-			System.out.println(e.getMessage()+" "+e.toString());
+			_logger.log(Level.SEVERE,"Failed to publish message to broker "+ _brokerAddr+ " topic:"+topic+" "+e.getMessage());
 		}
 		
 		return false;
@@ -218,12 +228,14 @@ public class MqttClientConnector implements MqttCallback {
 		}
 		catch(MqttException e)
 		{
-			System.out.println(e.toString());
-			System.out.println(e.getMessage());
+						
+			_logger.log(Level.SEVERE,"Failed to subscribe all topic on broker "+ _brokerAddr+" "+e.getMessage());
+
 		}
 		catch(Exception e)
 		{
-			System.out.println(e.getMessage()+" "+e.toString());
+			_logger.log(Level.SEVERE,"Failed to subscribe all topic on broker "+ _brokerAddr+" "+e.getMessage());
+
 		}
 		
 		return false;
@@ -238,13 +250,14 @@ public class MqttClientConnector implements MqttCallback {
         try
         {
 		_mqttClient.subscribe(topic,qos);
-		System.out.println("Subscribed to Topic:"+topic);
+		
+		_logger.info("Subscribed to Topic:"+topic+" Broker address: "+_brokerAddr);
+		
 		return true;
         }
         catch(MqttException e)
         {
-			System.out.println(e.toString());
-			System.out.println(e.getMessage());
+        _logger.log(Level.SEVERE,"Failed to subscribe all topic on broker "+ _brokerAddr+" "+e.getMessage());
         }
 		
 		return false;
@@ -253,23 +266,25 @@ public class MqttClientConnector implements MqttCallback {
 	
 	
 
-	public void connectionLost(Throwable cause) {
+	public void connectionLost(Throwable cause) 
+	{
 		
-		System.out.println("Connection lost!");
+		_logger.warning("Connection lost from broker: "+_brokerAddr);
 		
 	}
 	
-	public void deliveryComplete(IMqttDeliveryToken token) {
-		
-		System.out.println("Delievey Complete!");
+	public void deliveryComplete(IMqttDeliveryToken token) 
+	{
+				
+		_logger.info("Delievey to"+ this._brokerAddr+" Complete");
 		
 	}
 	
 
-	public void messageArrived(String topic, MqttMessage message) throws Exception {
-		
-		System.out.println("Message Arrived MessageID:"+message.getId());
-		System.out.println(message.toString());
+	public void messageArrived(String topic, MqttMessage message) throws Exception 
+	{
+			
+		_logger.info("Message Arrived from broker:"+_brokerAddr+" Topic:"+topic+" ID:"+message.getId()+" Message:"+message.toString());
 		
 	}
 
