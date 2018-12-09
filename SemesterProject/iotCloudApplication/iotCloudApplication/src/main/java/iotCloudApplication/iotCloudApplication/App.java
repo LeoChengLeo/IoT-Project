@@ -33,7 +33,7 @@ public class App
 				                                                      "https://csye6225-fall2018-chengl.me:8080/csye6225Webapp-1.0-SNAPSHOT/iotService/sensorData"
 				                                                      );
 		sensorEventHandler.connect();
-		sensorEventHandler.subscribeSensorData(1);
+		sensorEventHandler.subscribeSensorData(1); //Start listening on any new temperature sensorData
     	
     	
     }    

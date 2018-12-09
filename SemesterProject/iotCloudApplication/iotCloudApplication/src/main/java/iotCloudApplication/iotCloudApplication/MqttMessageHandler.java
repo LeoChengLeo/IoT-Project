@@ -24,8 +24,13 @@ public class MqttMessageHandler extends MqttClientConnector{
    private String subscribeTopic;       //Subscribe TempSensorData      
    private String publishTopic;         //AWS SNS Topic
    private SensorData sensorData;       //current TempSensorData
-   private String  httpPostServiceURL;  //webServiceApp URL, HTTP Post TempSensorData Request 
+   private String  httpPostServiceURL;  //webServiceApp URL which handle HTTP Post TempSensorData Request 
  
+   
+   private AmazonSNSClient lambdaNotifier;      //Set aws SNSClient, will trigger lambda function
+   private CloseableHttpClient httpClient;      //Set a HTTP Client will send senorData post request to iot webApp
+   
+   
    private static final Logger _logger= Logger.getLogger(MqttClientConnector.class.getName());
 
 	public MqttMessageHandler(String protocol, String host, int port,String subTopic,String pubTopic,String httpPostServiceURL) {
@@ -36,21 +41,14 @@ public class MqttMessageHandler extends MqttClientConnector{
 		
 		this.httpPostServiceURL=httpPostServiceURL;
 		this.sensorData= new SensorData();
-	}
-	
-	
-	
-	public MqttMessageHandler setSNSTopic(String pubSNSTopic)
-	{
-		this.publishTopic=pubSNSTopic;
-		return this;
-	}
-	
-	
-	public MqttMessageHandler setHttpServiceHost(String httpServiceHost)
-	{
-		this.httpPostServiceURL=httpServiceHost;
-		return this;		
+		
+		//Set awsCredential
+        AWSCredentialsProvider awsCredentialsProvider= new ClasspathPropertiesFileCredentialsProvider();
+        AWSCredentials awsCredentials=awsCredentialsProvider.getCredentials();
+        
+		this.httpClient= HttpClientBuilder.create().build();
+        this.lambdaNotifier= new AmazonSNSClient(awsCredentials);
+		
 	}
 	
 	
@@ -102,21 +100,14 @@ public class MqttMessageHandler extends MqttClientConnector{
 		
 		try
 		{
-					
-		   	//Set awsCredential
-	        AWSCredentialsProvider awsCredentialsProvider= new ClasspathPropertiesFileCredentialsProvider();
-	        AWSCredentials awsCredentials=awsCredentialsProvider.getCredentials();
-	        
-	        //Set aws SNSClient
-	        AmazonSNSClient snsClient= new AmazonSNSClient(awsCredentials);
-	        
+						        
 	        //Set aws SNS publish request
 	        PublishRequest publishRequest=new PublishRequest(publishTopic,snsMessage);
 
 	        _logger.info("Publishing Temperature sensorData to SNS Topic: "+publishTopic);
 	        
 	        //Publish temperature sensor Data to aws SNS Topic for triggering EmailNotification lambda function
-	        PublishResult publishResult=snsClient.publish(publishRequest);
+	        PublishResult publishResult=lambdaNotifier.publish(publishRequest);
 	            
 	        _logger.info(" Successfully publish message to SNS Topic:"+publishTopic+" "+publishRequest.getMessage());
 	           
@@ -141,9 +132,7 @@ public class MqttMessageHandler extends MqttClientConnector{
 				
 		try
 		{
-			//Set a Closeable Http client			
-			CloseableHttpClient client = HttpClientBuilder.create().build();
-			
+						
 			//Set a HTTP Post request with content type json
             HttpPost request = new HttpPost(httpPostServiceURL);
             request.setHeader("Content-Type", "application/json");
@@ -151,7 +140,7 @@ public class MqttMessageHandler extends MqttClientConnector{
             
             //Send HTTP Post request
             _logger.info("Sending post request "+httpPostServiceURL);
-            HttpResponse response = client.execute(request);
+            HttpResponse response = httpClient.execute(request);
         
             //Check if response code is 201 "created"
             if(response.getStatusLine().getStatusCode()==201)
