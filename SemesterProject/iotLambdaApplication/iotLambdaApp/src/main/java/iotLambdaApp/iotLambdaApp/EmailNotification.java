@@ -3,9 +3,7 @@ package iotLambdaApp.iotLambdaApp;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-
 import org.json.JSONObject;
-
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.SNSEvent;
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
@@ -22,6 +20,13 @@ import com.amazonaws.auth.ClasspathPropertiesFileCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.lambda.runtime.Context;
 
+
+
+
+/*
+ * This class with method handleRequest will be upload to AWS Lambda. Method only runs when any message publish to ASW SNS Topic 
+ * In this case, any temperature sensorData arrive cloud broker will trigger this lambda function to send temperature sensorData email notification to user  
+ * */
 
 public class EmailNotification implements RequestHandler<SNSEvent,Object>{
 	
@@ -68,7 +73,7 @@ public class EmailNotification implements RequestHandler<SNSEvent,Object>{
 	        Message message= new Message().withSubject(subject).withBody(body);
 	        SendEmailRequest emailRequest= new SendEmailRequest().withSource(FROM).withDestination(destination).withMessage(message);
 			
-			//Send Notification email			
+			//Send Notification Email			
 	        AmazonSimpleEmailService emailSender= AmazonSimpleEmailServiceClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(awsCredentials)).withRegion(Regions.US_EAST_1).build();
 	        emailSender.sendEmail(emailRequest);
             System.out.print("Successfully sent sensorData Notification email....");
@@ -76,7 +81,7 @@ public class EmailNotification implements RequestHandler<SNSEvent,Object>{
 			
 		   }catch (Exception e) 
 		   {
-			System.out.println("Failed to sned temperature SensorData Notification. SensorMessage:"+sensorDataJsonStr);
+			System.out.println("Failed to sned temperature SensorData Notification. SensorMessage: "+sensorDataJsonStr);
 		    System.out.println(e.getMessage());
 		    return false;
 		   }		
