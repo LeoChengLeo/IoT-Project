@@ -8,6 +8,7 @@ import json
 from src.json2xml import Json2xml
 
 class SensorData:
+    
     startedTime=None
     timeData=None
     type="No set"
@@ -23,7 +24,8 @@ class SensorData:
           
     def addNewValue(self, newValue):
         
-        if self.startedTime==None:    
+        if self.startedTime==None:
+            
             self.maxValue=newValue
             self.minValue=newValue
             self.startedTime=str(datetime.now())[:19]

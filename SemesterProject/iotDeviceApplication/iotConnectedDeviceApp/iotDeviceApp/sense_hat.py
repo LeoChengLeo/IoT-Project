@@ -4,6 +4,12 @@ Created on Sep 29, 2018
 @author: Leo
 '''
 
+
+'''
+This is a shadow class, only for test purpose on IDE
+'''
+
+
 class SenseHat:
     rotateDeg = 270
     clearFlag = False
