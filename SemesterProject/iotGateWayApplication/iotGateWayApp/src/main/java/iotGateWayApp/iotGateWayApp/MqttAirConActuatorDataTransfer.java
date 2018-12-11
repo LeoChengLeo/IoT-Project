@@ -3,12 +3,14 @@ package iotGateWayApp.iotGateWayApp;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-
 import iotGateWayApp.iotGateWayApp.MqttClientConnector;
 
 
+/*
+ * This MqttAirConActuatorDataTransfer will subscribe to airConditioner Actuator Data from cloud broker.As any new AirConActuatorData arrive,
+ * trigger custom callback to call the other MqttClient (actuatorDataTransfer) to transfer this Actuator to gateway broker.
+ */
 
 
 
@@ -19,7 +21,9 @@ public class MqttAirConActuatorDataTransfer extends MqttClientConnector{
 	private String subTopicFromCloud;
 	private String pubTopicToGateway;
 	
+	// This MqttClient will transfer the new arrived AirConditioner ActuatorData back to device by publishing actuator data to gateway broker
 	private MqttClientConnector actuatorDataTransfer;
+	
 	
 	private static final Logger _logger= Logger.getLogger(MqttAirConActuatorDataTransfer.class.getName());
 	
@@ -62,7 +66,7 @@ public class MqttAirConActuatorDataTransfer extends MqttClientConnector{
 	
 
 	
-	//listen on AirConditioner ActuatorData from cloud
+	//Listen on AirConditioner ActuatorData from cloud
 	public boolean subAirConActuatorDataFromCloud(int qos)
 	{
 		return super.subscribeTopic(subTopicFromCloud, qos);

@@ -7,6 +7,13 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.json.JSONObject;
 
 
+/*
+ * This sensorEvent handler will subscribe to temperature sensor data. As any temperature sensorData arrive, 
+ * will trigger custom callback method to do two things 
+ * 1) Make simple decision to update proper temperature actuator and publish this back to gateway broker 
+ * 2) Transfer new arrived temperature sensorData to cloud. 
+ */
+
 public class MqttSensorEventHandler extends MqttClientConnector{
 
 	
@@ -14,7 +21,7 @@ public class MqttSensorEventHandler extends MqttClientConnector{
    private String pubTopicToGateway;
    private String pubTopicToCloud;
    
-   /* This sensorDataTransfer will transfer the sensorData to cloud by publishing sensorData to remote Mqtt broker */
+   /* This sensorDataTransfer will transfer the sensorData to cloud by publishing sensorData to Cloud Mqtt broker */
    private MqttClientConnector sensorDataTransfer;  
    
    private SensorData currentSensorData;      //tempSensor
@@ -92,16 +99,19 @@ public class MqttSensorEventHandler extends MqttClientConnector{
 		{
 		   currentActuatorData=(25-currentSensorData.getCurrValue());
 		   _logger.info("Updated new temperature Acutator data...."+"TempActuatorData="+currentActuatorData);
+		   
 		}
 		else if(currentSensorData.getCurrValue()<22)  // Second sensorEvent, temperature will be increased
 		{
 			currentActuatorData=(22-currentSensorData.getCurrValue());
 		   _logger.info("Updated new temperature Acutator data...."+"TempActuatorData="+currentActuatorData);
+		   
 		}
 		else
 		{
 			currentActuatorData=0.0f;                 // No sensorEvent match
 			_logger.info("No sensor events matched "+"TempActuatorData="+currentActuatorData);
+			
 		}		
 		
 		return pubActuatorDataToGateway(2)&&pubSensorDataToCloud(2); //Publish actuatorData back to broker and transfer sensorData to remote cloud 
@@ -117,17 +127,18 @@ public class MqttSensorEventHandler extends MqttClientConnector{
 	}
 	
 	
-	//Transfer sensorData to cloud by publishing sensorData to remote broker
+	//Subscribe temperature sensorData from local broker 
+	public boolean subSensorDataFromGateway(int qos) 
+	{		
+		return super.subscribeTopic(subTopicFromGateway, qos);
+	}
+	
+	
+	//Call sensorDataTransfer to transfer temperature sensorData to cloud by publishing temperature sensorData to cloud broker
 	public boolean pubSensorDataToCloud(int qos)
 	{
 		return sensorDataTransfer.publishMessage(pubTopicToCloud, qos, currentSensorData.toJson().toString().getBytes());
 	}
 	
-	
-	//Subscribe sensorData from local broker 
-	public boolean subSensorDataFromGateway(int qos) 
-	{		
-		return super.subscribeTopic(subTopicFromGateway, qos);
-	}
 	
 }
